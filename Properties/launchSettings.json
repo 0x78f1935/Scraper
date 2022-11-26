@@ -1,0 +1,16 @@
+{
+  "profiles": {
+    "Scraper": {
+      "commandName": "Project",
+      "commandLineArgs": "-t https://oldschool.runescape.wiki/ -s runescape.wiki -v"
+    },
+    "Profile 1": {
+      "commandName": "Project",
+      "commandLineArgs": "--version"
+    },
+    "Profile 2": {
+      "commandName": "Project",
+      "commandLineArgs": "--help"
+    }
+  }
+}

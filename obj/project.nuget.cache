@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "+BYhat6lSMuCrPHSD+wxvDXwB05sGm640xQP1/5/ogkAjeXnF6rFy31BtAwqnqMaJA5vcxypW7xJgeXZoTK5ag==",
+  "success": true,
+  "projectFilePath": "D:\\private\\scraper\\Scraper\\Scraper.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ik951\\.nuget\\packages\\commandlineparser.ns20\\2.3.1\\commandlineparser.ns20.2.3.1.nupkg.sha512"
+  ],
+  "logs": []
+}

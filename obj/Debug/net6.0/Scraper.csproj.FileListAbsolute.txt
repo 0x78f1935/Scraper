@@ -1,0 +1,17 @@
+D:\private\scraper\Scraper\bin\Debug\net6.0\Scraper.exe
+D:\private\scraper\Scraper\bin\Debug\net6.0\Scraper.deps.json
+D:\private\scraper\Scraper\bin\Debug\net6.0\Scraper.runtimeconfig.json
+D:\private\scraper\Scraper\bin\Debug\net6.0\Scraper.dll
+D:\private\scraper\Scraper\bin\Debug\net6.0\Scraper.pdb
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.csproj.AssemblyReference.cache
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.GeneratedMSBuildEditorConfig.editorconfig
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.AssemblyInfoInputs.cache
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.AssemblyInfo.cs
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.csproj.CoreCompileInputs.cache
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.dll
+D:\private\scraper\Scraper\obj\Debug\net6.0\refint\Scraper.dll
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.pdb
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.genruntimeconfig.cache
+D:\private\scraper\Scraper\obj\Debug\net6.0\ref\Scraper.dll
+D:\private\scraper\Scraper\bin\Debug\net6.0\CommandLine.dll
+D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.csproj.CopyComplete
