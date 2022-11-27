@@ -15,3 +15,4 @@ D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.genruntimeconfig.cache
 D:\private\scraper\Scraper\obj\Debug\net6.0\ref\Scraper.dll
 D:\private\scraper\Scraper\bin\Debug\net6.0\CommandLine.dll
 D:\private\scraper\Scraper\obj\Debug\net6.0\Scraper.csproj.CopyComplete
+D:\private\scraper\Scraper\bin\Debug\net6.0\Newtonsoft.Json.dll
