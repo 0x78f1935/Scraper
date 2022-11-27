@@ -11,6 +11,8 @@ using System.Net;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.IO;
+using Newtonsoft.Json.Linq;
 
 namespace entrypoint
 {
@@ -43,24 +45,25 @@ namespace entrypoint
         private string regex_pattern;
         private int maxConcurrentCrawlers;
         private int maxConcurrentScrapers;
+        private int maxConcurrentDownloaders;
+        private bool stripQueryParms;
+        private bool DownloadImages;
+        private bool GenerateOutput;
+        private string Filename;
+        private bool Checkpoints;
+        private int total_downloads = 0;
 
         private Thread ThreadCrawler;
         private Thread ThreadScraper;
+        private Thread ThreadDownloader;
 
         private ConcurrentQueue<string> QueueCrawler = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> QueueScraper = new ConcurrentQueue<string>();
-        private ConcurrentDictionary<string, string> data = new ConcurrentDictionary<string, string>();
+        private ConcurrentQueue<string> QueueDownloads = new ConcurrentQueue<string>();
+        private ConcurrentDictionary<string, string> MemoryQueue = new ConcurrentDictionary<string, string>();
         private ConcurrentDictionary<string, List<string>> result = new ConcurrentDictionary<string, List<string>>();
         private List<string> analyzed = new List<string>();
         private Stopwatch timer = new Stopwatch();
-
-        private readonly HttpClient HttpClient = new HttpClient();
-        private readonly string GetRandomNumberUrl;
-        private SemaphoreSlim semaphore;
-        private long circuitStatus;
-        private const long CLOSED = 0;
-        private const long TRIPPED = 1;
-        public string UNAVAILABLE = "Unavailable";
 
         private class Options
         {
@@ -78,6 +81,18 @@ namespace entrypoint
             public int CCrawlers { get; set; }
             [Option('x', "scrapers", Required = false, HelpText = "Total concurrent tasks used for the Scraper.", Default = 4)]
             public int Cscrapers { get; set; }
+            [Option('d', "downloaders", Required = false, HelpText = "Total concurrent downloaders used for downloading data.", Default = 2)]
+            public int Cdownloaders { get; set; }
+            [Option('q', "queryparameters", Required = false, HelpText = "Strip query parameters from URL(s).", Default = false)]
+            public bool StripQueryParams { get; set; }
+            [Option('i', "images", Required = false, HelpText = "Download found images.", Default = false)]
+            public bool DownloadImages { get; set; }
+            [Option('j', "json", Required = false, HelpText = "Generates output based on the pattern provided.", Default = false)]
+            public bool GenerateOutput { get; set; }
+            [Option('f', "filename", Required = false, HelpText = "The file name of the generated output.", Default = "result.json")]
+            public string Filename { get; set; }
+            [Option('k', "checkpoints", Required = false, HelpText = "Saves in between scraping pages, turn off to save time, might fail.", Default = false)]
+            public bool Checkpoints { get; set; }
         }
 
         public static void Main(string[] args)
@@ -107,10 +122,17 @@ namespace entrypoint
                     regex_pattern = o.Pattern;
                     maxConcurrentCrawlers = o.CCrawlers;
                     maxConcurrentScrapers = o.Cscrapers;
+                    maxConcurrentDownloaders = o.Cdownloaders;
+                    stripQueryParms = o.StripQueryParams;
+                    DownloadImages = o.DownloadImages;
+                    GenerateOutput = o.GenerateOutput;
+                    Checkpoints = o.Checkpoints;
+                    Filename = o.Filename;
                 }
             );
             ThreadCrawler = new Thread(Crawler);
             ThreadScraper = new Thread(Scraper);
+            ThreadDownloader = new Thread(Downloader);
             Console.WriteLine($"|  Verbose: {debug}  |  Target: {root_url}  | ");
 
             Console.WriteLine("|  Configured scope ->");
@@ -155,13 +177,39 @@ namespace entrypoint
             }
         }
 
+        private string check_url(string uri) {
+            string url = uri;
+            if (!url.StartsWith(root_url))
+            {
+                if (root_url.EndsWith("/") && url.StartsWith("/"))
+                {
+                    url = root_url.Remove(root_url.Length - 1, 1) + url;
+                }
+                else if (url.StartsWith("/"))
+                {
+                    url = root_url + url;
+                }
+            }
+            url = url.Replace("&amp;", "&").Replace("&amp", "&");
+            return url;
+        }
+
         public void Start()
         {
             Task _crawler = new Task(() => { ThreadCrawler.Start(); });
             _crawler.Start();
             Task _scraper = new Task(() => { ThreadScraper.Start(); });
             _scraper.Start();
-            Task.WaitAll(_crawler, _scraper);
+            if (DownloadImages)
+            {
+                System.IO.Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "Downloads");
+                Task _downloader = new Task(() => { ThreadDownloader.Start(); });
+                _downloader.Start();
+                Task.WaitAll(_crawler, _scraper, _downloader);
+            }
+            else {
+                Task.WaitAll(_crawler, _scraper);
+            }
         }
 
         private void Crawler() {
@@ -173,19 +221,12 @@ namespace entrypoint
                     string response = "";
                     if (scopes.Any(s => uri.StartsWith(s) | uri.StartsWith(root_url)))
                     {
-                        string url = uri;
-                        if (!url.StartsWith(root_url)) { 
-                            if (root_url.EndsWith("/") && url.StartsWith("/"))
-                            {
-                                url = root_url.Remove(root_url.Length - 1, 1) + url;
-                            }
-                            else if (url.StartsWith("/"))
-                            {
-                                url = root_url + url;
-                            }
+                        string url = check_url(uri);
+                        if (stripQueryParms && url.Contains("?")) {
+                            url = url.Split("?")[0];
                         }
                         response = request(url);
-                        data.TryAdd(url, response);
+                        MemoryQueue.TryAdd(url, response);
                         QueueScraper.Enqueue(url);
                     }
 
@@ -194,22 +235,25 @@ namespace entrypoint
                     foreach (Match match in matches)
                     {
                         string m = match.Groups[1].Value.Split("\"")[0];
-                        if (!analyzed.Contains(m)) {                             
+                        if (!analyzed.Contains(m)) {
                             if (debug)
                             {
                                 Console.WriteLine($"|  ANALYZING: {m}");
                             }
 
                             analyzed.Add(m);
-                            if (scopes.Any(s=>m.StartsWith(s))) {
+                            if (scopes.Any(s => m.StartsWith(s))) {
                                 QueueCrawler.Enqueue(m);
                             }
                         }
                     }
+                    Console.Clear();
                     Console.WriteLine($"|  Analyzed: {analyzed.Count()}");
                     Console.WriteLine($"|  Total in queue: {QueueCrawler.Count()}");
                     Console.WriteLine($"|  Ready for scraping: {QueueScraper.Count()}");
                     Console.WriteLine($"|  Total Scraped: {result.Count()}");
+                    Console.WriteLine($"|  Ready for download: {QueueDownloads.Count()}");
+                    Console.WriteLine($"|  Total Downloads: {total_downloads}");
                     Console.WriteLine($"|  Running time: {timer.Elapsed}");
                 }
                 Console.WriteLine($"|  Crawler Finished: {timer.Elapsed}");
@@ -220,13 +264,16 @@ namespace entrypoint
         private void Scraper()
         {
             while (QueueScraper.Count() > 0 || QueueCrawler.Count() > 0 || ThreadCrawler.IsAlive)
-            { 
-                Parallel.ForEach(ParallelExtention.GetParrallelConsumingEnumerable(QueueScraper), new ParallelOptions { MaxDegreeOfParallelism = maxConcurrentScrapers }, Items =>
+            {
+                Parallel.ForEach(
+                    ParallelExtention.GetParrallelConsumingEnumerable(QueueScraper),
+                    new ParallelOptions { MaxDegreeOfParallelism = maxConcurrentScrapers },
+                    Items =>
                 {
                     foreach (var target in Items)
                     {
                         string content;
-                        data.TryRemove(target, out content);
+                        MemoryQueue.TryRemove(target, out content);
                         if (debug)
                         {
                             Console.WriteLine($"|  SCRAPING: {target}");
@@ -236,15 +283,54 @@ namespace entrypoint
                             List<string> converted_matches = new List<string>();
                             foreach (string uri in matches.Cast<Match>().Select(m => m.Value).ToArray()) { converted_matches.Add(uri); }
                             result.TryAdd(target, converted_matches);
+                            MatchCollection images = regex(@"<img\b[^\<\>]+?\bsrc\s*=\s*[""'](?<L>.+?)[""'][^\<\>]*?\>", content);
+                            List<string> converted_images = new List<string>();
+                            foreach (Match uri in images) {
+                                string url = check_url(uri.Groups[1].Value.Split("\"")[0]);
+                                QueueDownloads.Enqueue(url);
+                            }
                         }
                     }
-                    Console.WriteLine($"|  Crawler Finished: {timer.Elapsed}");
                 });
-                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @"\results.json", JsonConvert.SerializeObject(result));
-                Thread.Sleep(100);
+                if (Checkpoints && GenerateOutput)
+                {
+                    File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @$"\{Filename}", JsonConvert.SerializeObject(result));
+                }
             }
-            File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @"\results.json", JsonConvert.SerializeObject(result));
+            if (GenerateOutput) {
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @$"\{Filename}", JsonConvert.SerializeObject(result));
+            }
             Console.WriteLine($"|  Finished!");
+        }
+
+        private void Downloader()
+        {
+            while (QueueScraper.Count() > 0 || QueueCrawler.Count() > 0 || ThreadCrawler.IsAlive || ThreadScraper.IsAlive)
+            {
+                Parallel.ForEach(
+                    ParallelExtention.GetParrallelConsumingEnumerable(QueueDownloads),
+                    new ParallelOptions { MaxDegreeOfParallelism = maxConcurrentDownloaders },
+                    Items =>
+                {
+                    foreach (string target in Items)
+                    {
+                        if (debug) { 
+                            Console.WriteLine($"|  DOWNLOADING: {target}");
+                        }
+                        using (WebClient client = new WebClient())
+                        {
+                            client.Headers["user-agent"] = user_agent;
+                            MatchCollection filename_match = regex(@"((.+\\)*(.+)\..{1,3})", target);
+                            string filename = filename_match[0].Value.Split("/")[filename_match[0].Value.Split("/").Count() - 1];
+                            string target_output_folder = AppDomain.CurrentDomain.BaseDirectory + @$"\Downloads\{filename}";
+                            if (!File.Exists(target_output_folder)) { 
+                                client.DownloadFile(new Uri(target), target_output_folder);
+                                total_downloads += 1;
+                            }
+                        }
+                    }
+                });
+            }
         }
     }
 }
