@@ -14,35 +14,70 @@ using Newtonsoft.Json;
 
 namespace entrypoint
 {
+    public static class ParallelExtention {
+        public static IEnumerable<IEnumerable<T>> GetParrallelConsumingEnumerable<T>(this IProducerConsumerCollection<T> collection)
+        {
+            T item;
+            while (collection.TryTake(out item))
+            {
+                yield return GetParrallelConsumingEnumerableInner(collection, item);
+            }
+        }
 
-    class CLI
+        private static IEnumerable<T> GetParrallelConsumingEnumerableInner<T>(IProducerConsumerCollection<T> collection, T item)
+        {
+            yield return item;
+            while (collection.TryTake(out item))
+            {
+                yield return item;
+            }
+        }
+    }
+
+    class CLI  // CS1106
     {
         private bool debug = false;
-        private Thread crawler;
-        private Thread scraper;
-        private List<string> scopes;
         private string root_url;
+        private List<string> scopes;
         private string user_agent;
-        private ConcurrentQueue<string> queue = new ConcurrentQueue<string>();
-        private ConcurrentQueue<string> queue2 = new ConcurrentQueue<string>();
+        private string regex_pattern;
+        private int maxConcurrentCrawlers;
+        private int maxConcurrentScrapers;
+
+        private Thread ThreadCrawler;
+        private Thread ThreadScraper;
+
+        private ConcurrentQueue<string> QueueCrawler = new ConcurrentQueue<string>();
+        private ConcurrentQueue<string> QueueScraper = new ConcurrentQueue<string>();
         private ConcurrentDictionary<string, string> data = new ConcurrentDictionary<string, string>();
         private ConcurrentDictionary<string, List<string>> result = new ConcurrentDictionary<string, List<string>>();
         private List<string> analyzed = new List<string>();
         private Stopwatch timer = new Stopwatch();
-        private string regex_pattern;
+
+        private readonly HttpClient HttpClient = new HttpClient();
+        private readonly string GetRandomNumberUrl;
+        private SemaphoreSlim semaphore;
+        private long circuitStatus;
+        private const long CLOSED = 0;
+        private const long TRIPPED = 1;
+        public string UNAVAILABLE = "Unavailable";
 
         private class Options
         {
             [Option('v', "verbose", Required = false, HelpText = "Set output to verbose messages.", Default = false)]
             public bool Verbose { get; set; }
             [Option('t', "target", Required = true, HelpText = "Set target host.")]
-            public string Target{ get; set; }
+            public string Target { get; set; }
             [Option('s', "scope", Required = true, HelpText = "Allowed domain scope, use ; as delimiter.")]
             public string Scope { get; set; }
             [Option('a', "agent", Required = false, HelpText = "Set custom user agent.", Default = "Mozilla/5.0 (Windows; U; Windows NT 6.2) AppleWebKit/534.2.1 (KHTML, like Gecko) Chrome/35.0.822.0 Safari/534.2.1")]
             public string Agent { get; set; }
             [Option('p', "pattern", Required = true, HelpText = "Regex pattern to scrape with.")]
             public string Pattern { get; set; }
+            [Option('c', "crawlers", Required = false, HelpText = "Total concurrent tasks used for the Crawler.", Default = 4)]
+            public int CCrawlers { get; set; }
+            [Option('x', "scrapers", Required = false, HelpText = "Total concurrent tasks used for the Scraper.", Default = 4)]
+            public int Cscrapers { get; set; }
         }
 
         public static void Main(string[] args)
@@ -59,31 +94,37 @@ namespace entrypoint
             new CLI(args);
         }
 
-        public CLI(string[] args) {             
+        public CLI(string[] args)
+        {
             Parser.Default.ParseArguments<Options>(args).WithParsed<Options>(
                 o =>
                 {
-                    queue.Enqueue(o.Target);
+                    QueueCrawler.Enqueue(o.Target);
                     debug = o.Verbose;
                     root_url = o.Target;
                     user_agent = o.Agent;
                     scopes = o.Scope.Split(';').ToList();
                     regex_pattern = o.Pattern;
-                    crawler = new Thread(Crawler);
-                    scraper = new Thread(Scraper);
+                    maxConcurrentCrawlers = o.CCrawlers;
+                    maxConcurrentScrapers = o.Cscrapers;
                 }
             );
+            ThreadCrawler = new Thread(Crawler);
+            ThreadScraper = new Thread(Scraper);
             Console.WriteLine($"|  Verbose: {debug}  |  Target: {root_url}  | ");
 
             Console.WriteLine("|  Configured scope ->");
-            foreach (string scope in scopes) {
+            foreach (string scope in scopes)
+            {
                 Console.WriteLine($"|    - {scope}");
             }
             Console.WriteLine();
             Console.WriteLine("Processing ...");
             timer.Start();
             Start();
-            Console.WriteLine("Main method complete. Press any key to finish");
+
+            Console.WriteLine($"Main method completed, took: {timer.Elapsed}");
+            Console.WriteLine("Press any key to close the program...");
             Console.ReadKey();
         }
 
@@ -96,15 +137,6 @@ namespace entrypoint
 
         private string request(string url)
         {// Makes requests to <url> and read content of the source code which will be returned
-
-            if (root_url.EndsWith("/") && url.StartsWith("/"))
-            {
-                url = root_url.Remove(root_url.Length - 1, 1) + url;
-            }
-            else if (url.StartsWith("/"))
-            { 
-                url = root_url + url;
-            }
             HttpWebRequest theRequest = (HttpWebRequest)WebRequest.Create(url);
             theRequest.Headers["user-agent"] = user_agent;
             theRequest.Method = "GET";
@@ -125,84 +157,92 @@ namespace entrypoint
 
         public void Start()
         {
-            Task _crawler = new Task(() => { crawler.Start(); });
+            Task _crawler = new Task(() => { ThreadCrawler.Start(); });
             _crawler.Start();
-            Task _scraper = new Task(() => { scraper.Start(); });
+            Task _scraper = new Task(() => { ThreadScraper.Start(); });
             _scraper.Start();
             Task.WaitAll(_crawler, _scraper);
         }
 
-        private void Crawler()
-        {
-            string target;
-            while (queue.TryDequeue(out target))
+        private void Crawler() {
+            Parallel.ForEach(ParallelExtention.GetParrallelConsumingEnumerable(QueueCrawler), new ParallelOptions { MaxDegreeOfParallelism = maxConcurrentCrawlers }, Items =>
             {
-                string response = request(target);
-                MatchCollection matches = regex("href=\"(.*)\"", response);
-                data.TryAdd(target, response);
-                queue2.Enqueue(target);
-                foreach (Match match in matches)
+                foreach (string uri in Items)
                 {
-                    string m = match.Groups[1].Value.Split("\"")[0];
-                    foreach (string scope in scopes)
+                    // Obtain raw HTML and temporarly store the data
+                    string response = "";
+                    if (scopes.Any(s => uri.StartsWith(s) | uri.StartsWith(root_url)))
                     {
-                        if (m.StartsWith(scope) && !analyzed.Contains(m))
-                        {
-                            if (debug) { 
+                        string url = uri;
+                        if (!url.StartsWith(root_url)) { 
+                            if (root_url.EndsWith("/") && url.StartsWith("/"))
+                            {
+                                url = root_url.Remove(root_url.Length - 1, 1) + url;
+                            }
+                            else if (url.StartsWith("/"))
+                            {
+                                url = root_url + url;
+                            }
+                        }
+                        response = request(url);
+                        data.TryAdd(url, response);
+                        QueueScraper.Enqueue(url);
+                    }
+
+                    // Look for all available hrefs inside the HTML
+                    MatchCollection matches = regex(@"href\s*=\s*(?:[""'](?<1>[^""']*)[""']|(?<1>[^>\s]+))", response);
+                    foreach (Match match in matches)
+                    {
+                        string m = match.Groups[1].Value.Split("\"")[0];
+                        if (!analyzed.Contains(m)) {                             
+                            if (debug)
+                            {
                                 Console.WriteLine($"|  ANALYZING: {m}");
                             }
+
                             analyzed.Add(m);
-                            queue.Enqueue(m);
+                            if (scopes.Any(s=>m.StartsWith(s))) {
+                                QueueCrawler.Enqueue(m);
+                            }
                         }
-                        //else {
-                        //    Console.WriteLine($"|  SKIPPING: {m}");
-                        //}
                     }
+                    Console.WriteLine($"|  Analyzed: {analyzed.Count()}");
+                    Console.WriteLine($"|  Total in queue: {QueueCrawler.Count()}");
+                    Console.WriteLine($"|  Ready for scraping: {QueueScraper.Count()}");
+                    Console.WriteLine($"|  Total Scraped: {result.Count()}");
+                    Console.WriteLine($"|  Running time: {timer.Elapsed}");
                 }
-                Console.Clear();
-                Console.WriteLine($"|  Analyzed: {analyzed.Count()}");
-                Console.WriteLine($"|  Total in queue: {queue.Count()}");
-                Console.WriteLine($"|  Ready for scraping: {queue2.Count()}");
-                Console.WriteLine($"|  Total Scraped: {result.Count()}");
-                Console.WriteLine($"|  Running time: {timer.Elapsed}");
-            }
+                Console.WriteLine($"|  Crawler Finished: {timer.Elapsed}");
+            });
         }
+
 
         private void Scraper()
         {
-            while (data.Count() == 0) { 
-                Thread.Sleep(2000);
-            }
-            string target;
-            while (queue2.Count() > 0 || queue.Count() > 0 || crawler.IsAlive) {
-                while (queue2.TryDequeue(out target))
+            while (QueueScraper.Count() > 0 || QueueCrawler.Count() > 0 || ThreadCrawler.IsAlive)
+            { 
+                Parallel.ForEach(ParallelExtention.GetParrallelConsumingEnumerable(QueueScraper), new ParallelOptions { MaxDegreeOfParallelism = maxConcurrentScrapers }, Items =>
                 {
-                    string content;
-                    data.TryRemove(target, out content);
-                    if (debug) { 
-                        Console.WriteLine($"|  SCRAPING: {target}");
+                    foreach (var target in Items)
+                    {
+                        string content;
+                        data.TryRemove(target, out content);
+                        if (debug)
+                        {
+                            Console.WriteLine($"|  SCRAPING: {target}");
+                        }
+                        if (content != null) {
+                            MatchCollection matches = regex(regex_pattern, content);
+                            List<string> converted_matches = new List<string>();
+                            foreach (string uri in matches.Cast<Match>().Select(m => m.Value).ToArray()) { converted_matches.Add(uri); }
+                            result.TryAdd(target, converted_matches);
+                        }
                     }
-                    MatchCollection matches = regex(regex_pattern, content);
-                    List<string> converted_matches = new List<string>(matches.Cast<Match>().Select(m => m.Value).ToArray());
-                    result.TryAdd(target, converted_matches);
-                }
-                //Thread.Sleep(30000);
-                try
-                {
-                    File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @"\results.json", JsonConvert.SerializeObject(result));
-                }
-                catch { }
+                    Console.WriteLine($"|  Crawler Finished: {timer.Elapsed}");
+                });
+                File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @"\results.json", JsonConvert.SerializeObject(result));
+                Thread.Sleep(100);
             }
-
-            if (debug)
-            {
-                Console.WriteLine($"|  Analyzed: {analyzed.Count()}");
-                Console.WriteLine($"|  Total in queue: {queue.Count()}");
-                Console.WriteLine($"|  Ready for scraping: {queue2.Count()}");
-                Console.WriteLine($"|  Total Scraped: {result.Count()}");
-                Console.WriteLine($"|  Running time: {timer.Elapsed}");
-            }
-            Console.Write(JsonConvert.SerializeObject(result));
             File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @"\results.json", JsonConvert.SerializeObject(result));
             Console.WriteLine($"|  Finished!");
         }

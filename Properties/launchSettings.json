@@ -2,7 +2,7 @@
   "profiles": {
     "Scraper": {
       "commandName": "Project",
-      "commandLineArgs": "-t https://oldschool.runescape.wiki/ -s runescape.wiki;/ -p (https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|www\\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\\.[^\\s]{2,}|https?:\\/\\/(?:www\\.|(?!www))[a-zA-Z0-9]+\\.[^\\s]{2,}|www\\.[a-zA-Z0-9]+\\.[^\\s]{2,})"
+      "commandLineArgs": "-t https://oldschool.runescape.wiki/ -s runescape.wiki;/ -p (\\b(http|ftp|https):(\\/\\/|\\\\\\\\)[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?|\\bwww\\.[^\\s]) -v"
     },
     "Profile 1": {
       "commandName": "Project",
