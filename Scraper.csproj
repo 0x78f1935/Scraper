@@ -5,10 +5,40 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>profile.ico</ApplicationIcon>
+    <Copyright>undeƒined (0x78f1935)</Copyright>
+    <PackageProjectUrl>https://github.com/0x78f1935/Scraper</PackageProjectUrl>
+    <PackageIcon>profile.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/0x78f1935/Scraper</RepositoryUrl>
+    <PackageTags>scraper;crawler;regex;parallel</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="profile.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="C:\Users\ik951\Pictures\profile.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser.NS20" Version="2.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 </Project>

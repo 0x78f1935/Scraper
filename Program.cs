@@ -47,7 +47,7 @@ namespace entrypoint
         private int maxConcurrentScrapers;
         private int maxConcurrentDownloaders;
         private bool stripQueryParms;
-        private bool DownloadImages;
+        private bool Download;
         private bool GenerateOutput;
         private string Filename;
         private bool Checkpoints;
@@ -81,12 +81,12 @@ namespace entrypoint
             public int CCrawlers { get; set; }
             [Option('x', "scrapers", Required = false, HelpText = "Total concurrent tasks used for the Scraper.", Default = 4)]
             public int Cscrapers { get; set; }
-            [Option('d', "downloaders", Required = false, HelpText = "Total concurrent downloaders used for downloading data.", Default = 2)]
+            [Option('b', "downloaders", Required = false, HelpText = "Total concurrent downloaders used for downloading data.", Default = 2)]
             public int Cdownloaders { get; set; }
             [Option('q', "queryparameters", Required = false, HelpText = "Strip query parameters from URL(s).", Default = false)]
             public bool StripQueryParams { get; set; }
-            [Option('i', "images", Required = false, HelpText = "Download found images.", Default = false)]
-            public bool DownloadImages { get; set; }
+            [Option('d', "download", Required = false, HelpText = "Download found files.", Default = false)]
+            public bool DownloadFiles { get; set; }
             [Option('j', "json", Required = false, HelpText = "Generates output based on the pattern provided.", Default = false)]
             public bool GenerateOutput { get; set; }
             [Option('f', "filename", Required = false, HelpText = "The file name of the generated output.", Default = "result.json")]
@@ -124,12 +124,16 @@ namespace entrypoint
                     maxConcurrentScrapers = o.Cscrapers;
                     maxConcurrentDownloaders = o.Cdownloaders;
                     stripQueryParms = o.StripQueryParams;
-                    DownloadImages = o.DownloadImages;
+                    Download = o.DownloadFiles;
                     GenerateOutput = o.GenerateOutput;
                     Checkpoints = o.Checkpoints;
                     Filename = o.Filename;
                 }
             );
+            if (args.Count() <= 0)
+            {
+                return;
+            }
             ThreadCrawler = new Thread(Crawler);
             ThreadScraper = new Thread(Scraper);
             ThreadDownloader = new Thread(Downloader);
@@ -200,7 +204,7 @@ namespace entrypoint
             _crawler.Start();
             Task _scraper = new Task(() => { ThreadScraper.Start(); });
             _scraper.Start();
-            if (DownloadImages)
+            if (Download)
             {
                 System.IO.Directory.CreateDirectory(AppDomain.CurrentDomain.BaseDirectory + "Downloads");
                 Task _downloader = new Task(() => { ThreadDownloader.Start(); });
