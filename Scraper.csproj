@@ -13,17 +13,11 @@
     <RepositoryUrl>https://github.com/0x78f1935/Scraper</RepositoryUrl>
     <PackageTags>scraper;crawler;regex;parallel</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Scrawler</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="profile.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="C:\Users\ik951\Pictures\profile.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -33,6 +27,10 @@
 
   <ItemGroup>
     <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="profile.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>

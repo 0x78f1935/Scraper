@@ -13,8 +13,9 @@ using System.Diagnostics;
 using Newtonsoft.Json;
 using System.IO;
 using Newtonsoft.Json.Linq;
+using static System.Formats.Asn1.AsnWriter;
 
-namespace entrypoint
+namespace Scrawler
 {
     public static class ParallelExtention {
         public static IEnumerable<IEnumerable<T>> GetParrallelConsumingEnumerable<T>(this IProducerConsumerCollection<T> collection)
@@ -36,7 +37,7 @@ namespace entrypoint
         }
     }
 
-    class CLI  // CS1106
+    public class CLI  // CS1106
     {
         private bool debug = false;
         private string root_url;
@@ -97,6 +98,11 @@ namespace entrypoint
 
         public static void Main(string[] args)
         {// Entrypoint
+            credits();
+            new CLI(args);
+        }
+
+        private static void credits() {         
             Console.WriteLine("");
             Console.WriteLine("  ▄      ▄   ██▄   ▄███▄   ▄████  ▄█    ▄   ▄███▄   ██▄              ▄▄▄▄▄   ▄█▄    █▄▄▄▄ ██   █ ▄▄  ▄███▄   █▄▄▄▄ ");
             Console.WriteLine("   █      █  █  █  █▀   ▀  █▀   ▀ ██     █  █▀   ▀  █  █            █     ▀▄ █▀ ▀▄  █  ▄▀ █ █  █   █ █▀   ▀  █  ▄▀ ");
@@ -106,10 +112,29 @@ namespace entrypoint
             Console.WriteLine(" ▀▀▀  █   ██                 ▀       █   ██                                          ▀      █    ▀            ▀    ");
             Console.WriteLine("                                                                                           ▀                       ");
             Console.WriteLine("");
-            new CLI(args);
         }
 
-        public CLI(string[] args)
+        public static void WrapperEntrypoint(bool verbose, string target, string scope, string agent, string pattern, int crawlers, int scrapers, int downloaders, bool queryparameters, bool download, bool json, string filename, bool checkpoints)
+        {// Wrapper Entrypoint
+            credits();
+            string inputvalues = "";
+            if (verbose) { inputvalues += "-v ";  }
+            inputvalues += $"-t {target} ";
+            inputvalues += $"-s {scope} ";
+            inputvalues += $"-a {agent} ";
+            inputvalues += $"-p {pattern} ";
+            inputvalues += $"-c {crawlers} ";
+            inputvalues += $"-x {scrapers} ";
+            inputvalues += $"-b {downloaders} ";
+            if (queryparameters) { inputvalues += $"-q "; }
+            if (download) { inputvalues += $"-d "; }
+            if (json) { inputvalues += $"-j ";}
+            if (filename != null) { inputvalues += $"-f {filename} "; }
+            if (checkpoints) { inputvalues += $"-k "; }
+            new CLI(inputvalues.Split(" "));
+        }
+
+        private CLI(string[] args)
         {
             Parser.Default.ParseArguments<Options>(args).WithParsed<Options>(
                 o =>
@@ -150,8 +175,6 @@ namespace entrypoint
             Start();
 
             Console.WriteLine($"Main method completed, took: {timer.Elapsed}");
-            Console.WriteLine("Press any key to close the program...");
-            Console.ReadKey();
         }
 
         private MatchCollection regex(string pattern, string data)
@@ -252,6 +275,7 @@ namespace entrypoint
                         }
                     }
                     Console.Clear();
+                    Console.WriteLine($"|+|Undeƒined Scraper");
                     Console.WriteLine($"|  Analyzed: {analyzed.Count()}");
                     Console.WriteLine($"|  Total in queue: {QueueCrawler.Count()}");
                     Console.WriteLine($"|  Ready for scraping: {QueueScraper.Count()}");

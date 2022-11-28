@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "334W1Un2ItTQaLpctEojEbA2Rwjhad5mNBY85A2JGVWR8UcaZ2qVwNQUHSoc5shlhEw5dXl1MZQT3iWzPghm2g==",
+  "dgSpecHash": "Jxo3x5diyTDAmfRwpl92DJCI9ApMPEn103eXBVryUj07CNKayqakJyLrZnMNXw3bNadrolMd7nqsdQPhcv7oyQ==",
   "success": true,
-  "projectFilePath": "D:\\private\\scraper\\Scraper\\Scraper.csproj",
+  "projectFilePath": "D:\\private\\Scrawler\\Scraper\\Scraper.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\ik951\\.nuget\\packages\\commandlineparser.ns20\\2.3.1\\commandlineparser.ns20.2.3.1.nupkg.sha512",
     "C:\\Users\\ik951\\.nuget\\packages\\newtonsoft.json\\13.0.2\\newtonsoft.json.13.0.2.nupkg.sha512"

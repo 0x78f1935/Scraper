@@ -399,3 +399,6 @@ FodyWeavers.xsd
 
 ./bin
 ./obj
+
+src
+venv

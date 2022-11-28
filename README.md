@@ -76,9 +76,21 @@ Required option 'p, pattern' is missing.
 ## Examples
 
 ```
-.\Scraper.exe -v -j -k -i -t "https://oldschool.runescape.wiki/" -s "runescape.wiki;/" -c 32 -x 4 -d 4-p "(\b(http|ftp|https):(\/\/|\\\\)[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?|\bwww\.[^\s])"
+.\Scrawler.exe -v -j -k -i -t "https://oldschool.runescape.wiki/" -s "runescape.wiki;/" -c 32 -x 4 -d 4-p "(\b(http|ftp|https):(\/\/|\\\\)[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?|\bwww\.[^\s])"
 ```
 
 ```
-.\Scraper.exe -j -k -d -t "https://www.microsoft.com/" -s "microsoft.com;/" -p "(\b(http|ftp|https):(\/\/|\\\\)[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?|\bwww\.[^\s])"
+.\Scrawler.exe -j -k -d -t "https://www.microsoft.com/" -s "microsoft.com;/" -p "(\b(http|ftp|https):(\/\/|\\\\)[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?|\bwww\.[^\s])"
+```
+
+
+## Compiling Scraper
+Compiles C# into DLL. The `src` folder is required when compiling the python wrapper.
+```
+dotnet publish -o wrapper/src .
+```
+
+## Compiling Python wrapper
+```
+# TODO
 ```

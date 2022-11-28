@@ -89,11 +89,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\private\\scraper\\Scraper\\Scraper.csproj",
-      "projectName": "Scraper",
-      "projectPath": "D:\\private\\scraper\\Scraper\\Scraper.csproj",
+      "projectUniqueName": "D:\\private\\Scrawler\\Scraper\\Scraper.csproj",
+      "projectName": "Scrawler",
+      "projectPath": "D:\\private\\Scrawler\\Scraper\\Scraper.csproj",
       "packagesPath": "C:\\Users\\ik951\\.nuget\\packages\\",
-      "outputPath": "D:\\private\\scraper\\Scraper\\obj\\",
+      "outputPath": "D:\\private\\Scrawler\\Scraper\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
