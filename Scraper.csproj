@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationIcon>Assets\profile.ico</ApplicationIcon>
+    <Copyright>undeƒined (0x78f1935)</Copyright>
+    <PackageProjectUrl>https://github.com/0x78f1935/Scraper</PackageProjectUrl>
+    <PackageIcon>profile.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/0x78f1935/Scraper</RepositoryUrl>
+    <PackageTags>scraper;crawler;regex;parallel</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <AssemblyName>Scrawler</AssemblyName>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <Authors>undeƒined (0x78f1935)</Authors>
+    <Company>undeƒined (0x78f1935)</Company>
+    <Description>A simplistic web scraper which aims to make scrapping webpages and crawling links faster by utilizing parallel threading.</Description>
+    <Title>Scraper</Title>
+    <RepositoryType>git</RepositoryType>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\profile.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser.NS20" Version="2.3.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Assets\profile.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="Assets\profile.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Update="README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+</Project>
