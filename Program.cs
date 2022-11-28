@@ -58,11 +58,13 @@ namespace Scrawler
         private Thread ThreadScraper;
         private Thread ThreadDownloader;
 
+        public bool isRunning = false;
+
         private ConcurrentQueue<string> QueueCrawler = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> QueueScraper = new ConcurrentQueue<string>();
         private ConcurrentQueue<string> QueueDownloads = new ConcurrentQueue<string>();
         private ConcurrentDictionary<string, string> MemoryQueue = new ConcurrentDictionary<string, string>();
-        private ConcurrentDictionary<string, List<string>> result = new ConcurrentDictionary<string, List<string>>();
+        public ConcurrentDictionary<string, List<string>> result = new ConcurrentDictionary<string, List<string>>();
         private List<string> analyzed = new List<string>();
         private Stopwatch timer = new Stopwatch();
 
@@ -159,6 +161,7 @@ namespace Scrawler
             {
                 return;
             }
+            isRunning = true;
             ThreadCrawler = new Thread(Crawler);
             ThreadScraper = new Thread(Scraper);
             ThreadDownloader = new Thread(Downloader);
@@ -328,6 +331,7 @@ namespace Scrawler
             if (GenerateOutput) {
                 File.WriteAllText(AppDomain.CurrentDomain.BaseDirectory + @$"\{Filename}", JsonConvert.SerializeObject(result));
             }
+            isRunning = false;
             Console.WriteLine($"|  Finished!");
         }
 
