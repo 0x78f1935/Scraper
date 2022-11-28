@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using System.Threading;
+﻿using System.Collections.Concurrent;
 using CommandLine;
 using System.Text.RegularExpressions;
-using System.Timers;
 using System.Net;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Newtonsoft.Json;
-using System.IO;
-using Newtonsoft.Json.Linq;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Scrawler
 {
