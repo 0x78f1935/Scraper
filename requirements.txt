@@ -1,0 +1,8 @@
+# Requirements for Wrapper
+autopep8==2.0.0
+cffi==1.15.1
+clr-loader==0.2.4
+pycodestyle==2.10.0
+pycparser==2.21
+pythonnet==3.0.1
+tomli==2.0.1

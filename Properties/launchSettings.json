@@ -4,15 +4,15 @@
       "commandName": "Project",
       "commandLineArgs": ".\\Scraper.exe -j -k -d -t \"https://oldschool.runescape.wiki/\" -s \"runescape.wiki;/\" -p \"(\\b(http|ftp|https):(\\/\\/|\\\\\\\\)[\\w\\-_]+(\\.[\\w\\-_]+)+([\\w\\-\\.,@?^=%&:/~\\+#]*[\\w\\-\\@?^=%&/~\\+#])?|\\bwww\\.[^\\s])\""
     },
-    "Profile 1": {
+    "Version": {
       "commandName": "Project",
       "commandLineArgs": "--version"
     },
-    "Profile 2": {
+    "Help": {
       "commandName": "Project",
       "commandLineArgs": "--help"
     },
-    "Profile 3": {
+    "No Arguments": {
       "commandName": "Project"
     }
   }

@@ -5,7 +5,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <ApplicationIcon>profile.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\profile.ico</ApplicationIcon>
     <Copyright>undeƒined (0x78f1935)</Copyright>
     <PackageProjectUrl>https://github.com/0x78f1935/Scraper</PackageProjectUrl>
     <PackageIcon>profile.png</PackageIcon>
@@ -14,10 +14,17 @@
     <PackageTags>scraper;crawler;regex;parallel</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <AssemblyName>Scrawler</AssemblyName>
+    <GenerateDocumentationFile>False</GenerateDocumentationFile>
+    <Authors>undeƒined (0x78f1935)</Authors>
+    <Company>undeƒined (0x78f1935)</Company>
+    <Description>A simplistic web scraper which aims to make scrapping webpages and crawling links faster by utilizing parallel threading.</Description>
+    <Title>Scraper</Title>
+    <RepositoryType>git</RepositoryType>
+    <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="profile.ico" />
+    <Content Include="Assets\profile.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,11 +33,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Assets\profile.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Update="LICENSE">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Update="profile.png">
+    <None Update="Assets\profile.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
